@@ -1,66 +1,46 @@
-# TCP Client Server
+# Distributed File Transfer
 
-My implementation of a multithreaded TCP Client/Server written in C++. The purpose of this project was to grasp the concepts of socket programming, utilize the pthread library to manage threads and synchronise them using mutexes and condition variables.
+[![Project showcase](docs/assets/og.png)](https://mayank-vekariya.github.io/Distributed-File-Storage-System/)
 
-TCP is a reliable protocol that guarantees that the data remain intact and arrive in the same order in which they were sent. While, multithreading allows multiple clients to connect and interact with the server in tandem, without significant drop-offs in transmission time.
+**[Explore the showcase](https://mayank-vekariya.github.io/Distributed-File-Storage-System/)** · [Local setup](LOCAL_SETUP.md) · [Architecture](ARCHITECTURE.md) · [Deployment](DEPLOYMENT.md)
 
-## Implementation
+An educational multithreaded TCP client/server in C++. It transfers a requested directory tree using communication threads, a bounded worker queue and per-socket mutexes.
 
-- The Client connects and requests a specific directory from the Server. Then, it receives each file along with its information, so that it can locally replicate the same folder hierarchy. 
+## What is implemented
 
-- The Server creates two kinds of threads to handle the requests. The **communication threads** that are responsible for each client and the **worker threads** that send the respective files.
+- Concurrent client connections and a fixed worker pool.
+- Producer/consumer coordination with pthread mutexes and condition variables.
+- File metadata and content transfer followed by local directory reconstruction.
+- A deliberately low-level systems project, not a replicated distributed database.
 
-![ServerClient](https://user-images.githubusercontent.com/73662635/180067338-e6df7da1-c5e4-4f0c-89e2-a787c2d01608.png)
+## System overview
 
-## Data Server
+![Distributed File Transfer architecture](docs/assets/architecture.svg)
 
-I chose a rather simple approach of keeping the thread functions in the [helperFunctions.cpp](Data_Server/helperFunctions.cpp) file and the basic server structure in [dataServer.cpp](Data_Server/dataServer.cpp).
+## Quick start
 
-- On startup, the server awaits for connections from clients on the predefined port that is provided as an argument.
+Read [LOCAL_SETUP.md](LOCAL_SETUP.md) for dependencies and runtime limits before starting the application. To preview only the static project page, from the repository root:
 
-- When a client sends a request, a new communication thread is being created to handle it. This way the server is able to receive and process requests by multiple clients at a time.
-
-- The directory is read from the server's local file system recursively, until each file in the hierarchy has been placed in the worker queue.
-
-- When a worker thread is available, it gets allocated a file transfer job, if the queue is not empty. Then, it processes that file and sends it to the client.
-
-- Finally, with the use of a map of mutexes for each socket, I ensure that only one worker thread at a time can write on a specific socket.
-
-## Remote Client
-The code for the client is in the [remoteClient.cpp](Remote_Client/remoteClient.cpp) file.
-- On the client side the server IP, port number and directory that is requested from the server is given as an argument. 
-- A socket is created to connect to the server and the request is sent. 
-- Then, for each file of the directory it reads from the socket the file path, metadata and the file itself. Using this information it replicates locally the same folder structure.
-- If a file already exists locally, then it gets deleted and replaced with the new file sent from the server.
-
-## Compilation and Execution
-
-To compile the necessary files for the Server:
-```
-$ make server
+```sh
+python -m http.server 4173 --bind 127.0.0.1 --directory docs
 ```
 
-To compile the necessary files for the Client:
-```
-$ make client
-```
+Open http://127.0.0.1:4173. This preview has no backend and uses no credentials.
 
-To compile all the files:
-```
-$ make all
-```
+## Repository guide
 
-To start the server in the [Data_Server](Data_Server/) directory run:
-```
-./dataServer -p <port> -s <pool_size> -q <queue_size> -b <block_size>
-```
+- [LOCAL_SETUP.md](LOCAL_SETUP.md): installation, local commands and troubleshooting.
+- [ARCHITECTURE.md](ARCHITECTURE.md): source mapping, request flow and tradeoffs.
+- [DEPLOYMENT.md](DEPLOYMENT.md): Pages setup and application-hosting boundaries.
+- `docs/`: dependency-free HTML, CSS, JavaScript and images.
+- `scripts/check_showcase.py`: static-page checks; run with Python before publishing.
 
-To start the client in the [Remote_Client](Remote_Client/) directory run:
-```
-./remoteClient -i <server_ip> -p <server_port> -d <directory>
-```
+## Status and limitations
 
-To delete all the executable and object files generated:
-```
-$ make clean
-```
+An educational file-transfer system, not a replicated storage cluster. Use only on localhost or a trusted private network: the protocol has no TLS or authentication, and received files can overwrite local files.
+
+The banner is AI-generated conceptual artwork, not an application screenshot or measured model output. The architecture diagram is an implementation-oriented schematic. No benchmark, scale or uptime claims are implied.
+
+## Credits and attribution
+
+Original implementation and README history are preserved in Git. See the architecture guide for the original server/client visual. No new license is asserted by this documentation.

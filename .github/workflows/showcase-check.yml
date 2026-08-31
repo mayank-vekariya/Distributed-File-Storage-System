@@ -1,0 +1,19 @@
+name: Showcase checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  static-showcase:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate static project site
+        run: python scripts/check_showcase.py
+      - name: Compile POSIX client and server
+        run: make all
